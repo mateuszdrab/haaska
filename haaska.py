@@ -442,6 +442,28 @@ class InputSliderEntity(Entity):
         self._call_service('input_slider/select_value', {'value': adjusted})
 
 
+class InputNumberEntity(Entity):
+    def get_percentage(self):
+        state = self.ha.get('states/' + self.entity_id)
+        value = float(state['state'])
+        minimum = state['attributes']['min']
+        maximum = state['attributes']['max']
+        adjusted = value - minimum
+
+        return (adjusted * 100.0 / (maximum - minimum))
+
+    def set_percentage(self, val):
+        state = self.ha.get('states/' + self.entity_id)
+        minimum = state['attributes']['min']
+        maximum = state['attributes']['max']
+        step = state['attributes']['step']
+        scaled = val * (maximum - minimum) / 100.0
+        rounded = step * round(scaled / step)
+        adjusted = rounded + minimum
+
+        self._call_service('input_number/set_value', {'value': adjusted})
+        
+        
 class GarageDoorEntity(ToggleEntity):
     def turn_on(self):
         self._call_service('garage_door/open')
@@ -590,6 +612,7 @@ DOMAINS = {
     'group': ToggleEntity,
     'input_boolean': ToggleEntity,
     'input_slider': InputSliderEntity,
+    'input_number': InputNumberEntity,
     'switch': ToggleEntity,
     'fan': FanEntity,
     'cover': CoverEntity,
